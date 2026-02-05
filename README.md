@@ -36,3 +36,160 @@ Observaciones
     Los mensajes de error son claros, pero podrían ser más descriptivos para ayudar al usuario a entender qué salió mal.
   Optimización:
     El código es funcional, pero podría beneficiarse de algunas optimizaciones, como el uso de funciones para evitar la repetición de código (por ejemplo, para la generación de archivos TXT y Excel).
+
+
+
+
+
+
+
+
+
+# README
+
+## Script QGIS – Generación de valores catastrales GC203T05
+
+Este script está diseñado para ejecutarse **exclusivamente desde la Consola Python de QGIS** y tiene como objetivo procesar archivos **DBF GC203T05** para generar:
+
+- Archivos **Excel (.xlsx)** por municipio
+- Archivos **TXT delimitados por `|`**, fragmentados por un número máximo de registros
+
+El script implementa validaciones estrictas y manejo controlado de errores para garantizar la calidad de la información generada.
+
+---
+
+## 🧩 Funcionalidad general
+
+A partir de un archivo DBF con estructura GC203T05, el script:
+
+1. Valida que el archivo seleccionado sea correcto y contenga información
+2. Solicita al usuario datos administrativos (ejercicio, periodos, estatus)
+3. Construye la **clave catastral completa**
+4. Calcula el **valor catastral total**
+5. Genera salidas por municipio en formatos Excel y TXT
+
+---
+
+## 📂 Insumos requeridos
+
+- Archivo **DBF GC203T05** con las siguientes columnas obligatorias:
+
+```
+MUNICIPIO
+ZONA
+MANZANA
+LOTE
+EDIFICIO
+DEPTO
+VTERRPROP
+VTERRCOM
+VCONSPROP
+VCONSCOM
+```
+
+---
+
+## 🛡️ Validaciones implementadas
+
+El script cuenta con un esquema robusto de validaciones:
+
+### Archivo DBF
+- Verifica que el archivo sea seleccionado
+- Comprueba que el DBF sea válido y cargable en QGIS
+- Valida que contenga registros
+- Confirma que incluya todas las columnas requeridas
+
+### Datos ingresados por el usuario
+
+**Ejercicio**
+- Debe ser numérico
+- Exactamente 4 dígitos (ej. 2024)
+
+**Periodo inicio / fin**
+- Valores numéricos entre 1 y 12
+- El periodo inicio no puede ser mayor al periodo fin
+
+**Estatus**
+- Valor numérico
+- Rango permitido: 1 a 9
+
+**Registros por TXT**
+- Valor entero positivo
+
+Ante cualquier inconsistencia, el script muestra un mensaje descriptivo mediante ventanas de QGIS y detiene la ejecución.
+
+---
+
+## 🧮 Procesamiento de la información
+
+### Construcción de la clave catastral
+
+La clave catastral se forma concatenando los siguientes campos, aplicando ceros a la izquierda según corresponda:
+
+| Campo | Longitud |
+|-----|---------|
+| MUNICIPIO | 3 |
+| ZONA | 2 |
+| MANZANA | 3 |
+| LOTE | 2 |
+| EDIFICIO | 2 |
+| DEPTO | 4 |
+
+
+### Cálculo del valor catastral
+
+El valor catastral se obtiene mediante la suma de:
+
+- VTERRPROP
+- VTERRCOM
+- VCONSPROP
+- VCONSCOM
+
+El resultado se guarda en una columna dinámica con el nombre:
+
+```
+VC{EJERCICIO}
+```
+
+---
+
+## 📤 Salidas generadas
+
+Para cada municipio se generan:
+
+- **Archivo Excel (.xlsx)** con todos los registros del municipio
+- **Uno o varios archivos TXT**, según el límite máximo de registros definido
+
+### Formato del TXT
+
+- Delimitador: `|`
+- Sin encabezados
+- Codificación estándar
+
+---
+
+## 🗺️ Organización de archivos
+
+Los archivos se nombran con la siguiente estructura:
+
+```
+<MUNICIPIO>_<NOMBRE_MUNICIPIO>_VALORES_<EJERCICIO>.xlsx
+<MUNICIPIO>_<NOMBRE_MUNICIPIO>_VALORES_<EJERCICIO>_PARTE_#.txt
+```
+
+---
+
+## ✅ Mensajes al usuario
+
+- Los errores se muestran mediante ventanas emergentes claras y descriptivas
+- Al finalizar correctamente, se notifica al usuario que los archivos fueron generados con éxito
+
+---
+
+## 🏁 Consideraciones finales
+
+- El script está pensado para uso **institucional y operativo**
+- Evita errores silenciosos y archivos mal formados
+- Es adecuado para capacitación, entrega a municipios y procesos productivos
+
+Se recomienda no modificar la estructura sin validar previamente los impactos en los formatos de salida.
